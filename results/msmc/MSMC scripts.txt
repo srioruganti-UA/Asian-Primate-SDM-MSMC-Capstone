@@ -1,0 +1,103 @@
+
+
+
+
+
+
+
+
+sudo apt update
+sudo apt install -y build-essential libgsl-dev zlib1g-de
+
+
+git clone https://github.com/stschiff/msmc-tools.git
+git clone https://github.com/stschiff/msmc.git
+
+python3 ~/msmc-tools/generate_multihetsep.py "/mnt/c/Users/soruganti/Downloads/PD_0598.variable.filtered.HF.snps.vcf.gz" > ~/PD_0598.multihetsep.txt
+
+python3 ~/msmc-tools/generate_multihetsep.py "/mnt/c/Users/soruganti/Downloads/PD_0602.variable.filtered.HF.snps.vcf.gz" > ~/PD_0602.multihetsep.txt
+
+python3 ~/msmc-tools/generate_multihetsep.py "/mnt/c/Users/soruganti/Downloads/PD_0603.variable.filtered.HF.snps.vcf.gz" > ~/PD_0603.multihetsep.txt
+
+
+./build/release/msmc2 -t 4 -o ~/output_full \
+~/PD_0598.multihetsep.txt \
+~/PD_0602.multihetsep.txt \
+~/PD_0603.multihetsep.txt
+
+cd ~
+head -5 PD_0598.multihetsep.txt
+head -5 PD_0602.multihetsep.txt
+head -5 PD_0603.multihetsep.txt
+
+awk '$3 <= 0 {print; exit}' PD_0598.multihetsep.txt
+awk '$3 <= 0 {print; exit}' PD_0602.multihetsep.txt
+awk '$3 <= 0 {print; exit}' PD_0603.multihetsep.txt
+
+awk '$3 > 0' PD_0598.multihetsep.txt > PD_0598.clean.multihetsep.txt
+awk '$3 > 0' PD_0602.multihetsep.txt > PD_0602.clean.multihetsep.txt
+awk '$3 > 0' PD_0603.multihetsep.txt > PD_0603.clean.multihetsep.txt
+
+~/msmc2/build/release/msmc2 -t 4 -o ~/output_full \
+~/PD_0598.clean.multihetsep.txt \
+~/PD_0602.clean.multihetsep.txt \
+~/PD_0603.clean.multihetsep.txt
+
+head -n 60000 ~/PD_0598.cleaned.multihetsep.txt > ~/0598_medium.txt
+head -n 60000 ~/PD_0602.cleaned.multihetsep.txt > ~/0602_medium.txt
+head -n 60000 ~/PD_0603.cleaned.multihetsep.txt > ~/0603_medium.txt
+
+
+
+
+~/msmc2/build/release/msmc2 -t 1 -i 1 -p "1*1+5*1+1*1" -o ~/PD_0598 ~/0598_medium.txt
+
+~/msmc2/build/release/msmc2 -t 1 -i 1 -p "1*1+5*1+1*1" -o ~/PD_0602 ~/0602_medium.txt
+
+~/msmc2/build/release/msmc2 -t 1 -i 1 -p "1*1+5*1+1*1" -o ~/PD_0603 ~/0603_medium.txt
+
+
+ls -lh output_full.final.txt
+head output_full.final.txt
+
+
+
+python3 - <<'PY'
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
+from matplotlib.ticker import LogLocator, LogFormatterMathtext
+
+home = Path.home()
+mu = 1.25e-8
+gen = 8
+
+files = {
+    "Trachypithecus geei (PD_0598)": home / "PD_0598.final.txt",
+    "Trachypithecus phayrei (PD_0602)": home / "PD_0602.final.txt",
+    "Trachypithecus pileatus (PD_0603)": home / "PD_0603.final.txt",
+}
+
+plt.figure(figsize=(10, 6))
+
+for label, path in files.items():
+    df = pd.read_csv(path, sep='\t')
+    df = df[np.isfinite(df["right_time_boundary"])].copy()
+    df["years"] = df["left_time_boundary"] * gen / mu
+    df["Ne"] = 1 / (2 * mu * df["lambda"])
+    plt.step(df["years"], df["Ne"], where="post", linewidth=2, label=label)
+
+plt.xscale("log")
+plt.xlim(1e4, 1e7)
+plt.xlabel("Years before present")
+plt.ylabel("Effective population size")
+
+ax = plt.gca()
+ax.xaxis.set_major_locator(LogLocator(base=10.0, subs=(1.0,)))
+ax.xaxis.set_major_formatter(LogFormatterMathtext(base=10.0))
+
+plt.legend()
+plt.tight_layout()
+plt.show()
+PY
