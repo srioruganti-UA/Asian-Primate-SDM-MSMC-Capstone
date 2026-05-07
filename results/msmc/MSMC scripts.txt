@@ -3,12 +3,10 @@
 # install  tools
 
 
-
-
-
 sudo apt update
 sudo apt install -y build-essential libgsl-dev zlib1g-de
 
+# Get the Tools from msmc repos
 
 git clone https://github.com/stschiff/msmc-tools.git
 git clone https://github.com/stschiff/msmc.git
@@ -48,7 +46,7 @@ head -n 60000 ~/PD_0602.cleaned.multihetsep.txt > ~/0602_medium.txt
 head -n 60000 ~/PD_0603.cleaned.multihetsep.txt > ~/0603_medium.txt
 
 
-
+## Process Genome files
 
 ~/msmc2/build/release/msmc2 -t 1 -i 1 -p "1*1+5*1+1*1" -o ~/PD_0598 ~/0598_medium.txt
 
@@ -60,7 +58,7 @@ head -n 60000 ~/PD_0603.cleaned.multihetsep.txt > ~/0603_medium.txt
 ls -lh output_full.final.txt
 head output_full.final.txt
 
-
+## Generate plots
 
 python3 - <<'PY'
 import pandas as pd
