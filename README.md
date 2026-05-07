@@ -94,8 +94,8 @@ The study combines:
 
 ## 👩‍💻 Author
 
-**Ayesha Siddiqua Guffran**  
-Master’s in Information Science (Machine Learning)  
+**Srikanth Oruganti**  
+Master’s in Data science
 University of Arizona
 
 ---
